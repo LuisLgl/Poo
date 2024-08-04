@@ -55,10 +55,6 @@ class LojaInterface(ABC):
         pass
     
     @abstractmethod
-    def reembolsar_jogo(self, cpf_cliente, nome_jogo):
-        pass
-    
-    @abstractmethod
     def exibir_historico_cliente(self, cpf_cliente):
         pass
     
@@ -206,22 +202,7 @@ class Cliente(Base):
             self._saldo -= valor
             return True
         return False
-
-    def comprar_jogo(self, cpf_cliente, nome_produto, jogo):
-        cliente = self._clientes.get(cpf_cliente)
-        if not cliente:
-            print('Cliente não encontrado.')
-            return
-        
-        for jogo_comprado in cliente._jogos_comprados:
-            if jogo_comprado.get_nome() == nome_produto:
-                print('Jogo já comprado.')
-                return
-        
-        cliente._jogos_comprados.append(jogo)  # Adiciona o objeto Jogo à lista
-        self._receita += jogo._preco_original
-        print(f'Jogo {nome_produto} comprado com sucesso.')
-
+    
     def remover_jogo(self, nome_jogo):
         if nome_jogo in self._jogos_comprados:
             self._jogos_comprados.remove(nome_jogo)
@@ -364,7 +345,6 @@ class Loja(LojaInterface):
         else:
             print('Empresa não encontrada.')
    
-
     def excluir_produto(self, cnpj_empresa, nome_produto):
         
         empresa = self._empresas.get(cnpj_empresa)
@@ -385,7 +365,6 @@ class Loja(LojaInterface):
             print('Produto removido com sucesso.')
         else:
             print('Produto não encontrado.')
-
 
     def listar_produto(self):
         produtos = []
@@ -463,28 +442,6 @@ class Loja(LojaInterface):
         else:
             print('Produto não encontrado.')
 
-    def reembolsar_jogo(self, cpf_cliente, nome_jogo):
-        cliente = self._clientes.get(cpf_cliente)
-        if not cliente:
-            print('Cliente não encontrado.')
-            return
-
-        produto = None
-        for jogo in cliente._jogos_comprados:
-            if jogo.get_nome() == nome_jogo:
-                produto = jogo
-                break
-
-        if produto:
-            preco_original = produto._preco_original  # Certifique-se de que 'Jogo' tem um atributo '_preco_original'
-            cliente._saldo += preco_original
-            cliente._jogos_comprados.remove(produto)
-            self._receita -= preco_original
-            print(f'Jogo {nome_jogo} reembolsado com sucesso.')
-        else:
-            print('Jogo não encontrado na lista de compras do cliente.')
-
-
     def exibir_historico_cliente(self, cpf_cliente):
         cliente = self._clientes.get(cpf_cliente)
         if cliente:
@@ -501,7 +458,6 @@ class Loja(LojaInterface):
         else:
             print('Cliente não encontrado.')
 
-
     def exibir_jogos_comprados(self, cpf_cliente):
         cliente = self._clientes.get(cpf_cliente)
         if not cliente:
@@ -515,7 +471,6 @@ class Loja(LojaInterface):
                 print(jogo)
         else:
             print(f'O cliente {cliente.nome} ainda não comprou nenhum jogo.')
-
 
     def exibir_relatorio_financeiro(self):
         print(f'\nRelatório Financeiro:')
@@ -736,7 +691,7 @@ class Loja(LojaInterface):
 
     def menu_compras(self):
         while True:
-            print('\n1. Comprar Jogo\n2. Reembolsar Jogo\n3. Exibir Histórico de Compras\n4. Voltar\n')
+            print('\n1. Comprar Jogo\n2. Exibir Histórico de Compras\n3. Voltar\n')
             opcao = input('Escolha uma opção: ')
             
             if opcao == '1':
@@ -744,13 +699,9 @@ class Loja(LojaInterface):
                 nome_produto = input("Nome do Produto: ")
                 self.comprar_jogo(cpf_cliente, nome_produto)
             elif opcao == '2':
-                cpf_cliente = input('CPF do Cliente: ')
-                nome_jogo = input('Nome do Jogo: ')
-                self.reembolsar_jogo(cpf_cliente, nome_jogo)
-            elif opcao == '3':
                 cpf_cliente = input("CPF do Cliente: ")
                 self.exibir_historico_cliente(cpf_cliente)
-            elif opcao == '4':
+            elif opcao == '3':
                 break
             else:
                 print('Opção inválida. Tente novamente.')
