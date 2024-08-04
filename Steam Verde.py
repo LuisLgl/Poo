@@ -1,47 +1,43 @@
 from abc import ABC, abstractmethod
 
-class FuncBase(ABC):
-
+class LojaInterface(ABC):
+    
     @abstractmethod
-    def editar_cliente(self, cpf, novo_nome=None, novo_saldo=None):
+    def cadastrar_empresa(self, nome, cnpj):
         pass
-
-    @abstractmethod    
-    def cadastrar_cliente(self, nome, cpf, saldo=0):
-        pass
-
+    
     @abstractmethod
-    def excluir_cliente(self, cpf):
+    def excluir_empresa(self, cnpj):
         pass
-
+    
     @abstractmethod
-    def listar_cliente(self):
+    def listar_empresa(self):
         pass
     
     @abstractmethod
     def editar_empresa(self, cnpj, novo_nome=None):
         pass
-
-    @abstractmethod    
-    def cadastrar_empresa(self, nome, cnpj):
-        pass
-
+    
     @abstractmethod
-    def excluir_empresa(self, cnpj):
+    def cadastrar_cliente(self, nome, cpf, idade):
         pass
-
+    
     @abstractmethod
-    def listar_empresa(self):
+    def excluir_cliente(self, cpf):
         pass
-
+    
     @abstractmethod
-    def editar_produto(self, cnpj_empresa, nome_produto, novo_nome=None, novo_preco=None, nova_plataforma=None, nova_categoria=None, nova_promocao=None):
+    def listar_cliente(self):
         pass
-
-    @abstractmethod    
+    
+    @abstractmethod
+    def editar_cliente(self, cpf, novo_nome=None, nova_idade=None):
+        pass
+    
+    @abstractmethod
     def cadastrar_produto(self, cnpj_empresa, nome_produto, preco, plataforma=None, categoria=None, tipo_promocao=None):
         pass
-
+    
     @abstractmethod
     def excluir_produto(self, cnpj_empresa, nome_produto):
         pass
@@ -51,27 +47,56 @@ class FuncBase(ABC):
         pass
     
     @abstractmethod
+    def editar_produto(self, cnpj_empresa, nome_produto, novo_nome=None, novo_preco=None, nova_plataforma=None, nova_categoria=None, nova_promocao=None):
+        pass
+    
+    @abstractmethod
+    def comprar_jogo(self, cpf_cliente, nome_produto):
+        pass
+    
+    @abstractmethod
+    def reembolsar_jogo(self, cpf_cliente, nome_jogo):
+        pass
+    
+    @abstractmethod
+    def exibir_historico_cliente(self, cpf_cliente):
+        pass
+    
+    @abstractmethod
+    def exibir_jogos_comprados(self, cpf_cliente):
+        pass
+    
+    @abstractmethod
+    def exibir_relatorio_financeiro(self):
+        pass
+    
+    @abstractmethod
     def executar(self):
         pass
     
 class ProdutoInterface(ABC):
+    
+    @abstractmethod
+    def nome(self):
+        pass
+    
+    @abstractmethod
+    def aplicar_taxa_loja(self, preco):
+        pass
+    
     @abstractmethod
     def aplicar_promocao(self):
         pass
-
+    
     @abstractmethod
-    def aplicar_taxa_loja(self):
-        pass
-
-    @abstractmethod
-    def definir_promocao(self):
+    def definir_promocao(self, tipo_promocao):
         pass
 
     @abstractmethod
     def __str__(self):
         pass
 
-class Entidade:
+class Base:
     def __init__(self, nome, chave):
         self._nome = nome
         self._chave = chave
@@ -86,58 +111,17 @@ class Entidade:
 
     def __str__(self):
         return f'{self._nome} - {self._chave}'
-
-class Produto:
-    def __init__(self, nome, preco, empresa=None):
-        self._nome = nome
-        self._preco = preco
-        self._preco_original = preco
-        self._empresa = empresa
-        self._promocao = None  # Promoção inicial como None
-
-    @property
-    def nome(self):
-        return self._nome
-
-    def aplicar_taxa_loja(self, preco):
-        return preco * 1.30
-
-    def aplicar_promocao(self):
-        preco_com_taxa = self.aplicar_taxa_loja(self._preco_original)
-        if self._promocao == 'lançamento':
-            return preco_com_taxa * 0.90  # 10% de desconto para lançamento
-        elif self._promocao == 'fim de ano':
-            return preco_com_taxa * 0.85  # 15% de desconto para fim de ano
-        return preco_com_taxa
-
-    def definir_promocao(self, tipo_promocao):
-        self._promocao = tipo_promocao
-        self._preco = self._preco_original  # Reverte para o preço original antes de aplicar nova promoção
-        preco_com_taxa = self.aplicar_taxa_loja(self._preco)
-        if tipo_promocao == 'lançamento':
-            self._preco = preco_com_taxa * 0.90
-        elif tipo_promocao == 'fim de ano':
-            self._preco = preco_com_taxa * 0.85
-
-    def __str__(self):
-        preco_original = self._preco_original
-        preco_com_taxa = self._aplicar_taxa_loja(preco_original)
-        preco_final = self.aplicar_promocao()
-        return (f'{self._nome} - Preço Original: R${preco_original:.2f}, '
-                f'Preço com Taxa: R${preco_com_taxa:.2f}, '
-                f'Preço com Promoção: R${preco_final:.2f} - Empresa: {self._empresa}')
-
-class Jogo:
-    def __init__(self, nome, preco_original, nome_empresa, plataforma=None, categoria=None):
-        self._nome = nome
+    
+class Jogo(Base,ProdutoInterface):
+    def __init__(self, nome, preco_original, chave, plataforma=None, categoria=None):
+        super().__init__(nome, chave)
         self._preco_original = preco_original
-        self._nome_empresa = nome_empresa
         self._plataforma = plataforma
         self._categoria = categoria
         self._promocao = None
-        self._preco_com_taxa = self._aplicar_taxa_loja(preco_original)
+        self._preco_com_taxa = self.aplicar_taxa_loja(preco_original)
 
-    def _aplicar_taxa_loja(self, preco):
+    def aplicar_taxa_loja(self, preco):
         return preco * 1.30  # Supondo uma taxa de 30%
 
     def definir_promocao(self, tipo_promocao):
@@ -149,7 +133,7 @@ class Jogo:
             self._promocao = None
 
     def aplicar_promocao(self):
-        preco_com_taxa = self._aplicar_taxa_loja(self._preco_original)
+        preco_com_taxa = self.aplicar_taxa_loja(self._preco_original)
         if self._promocao:
             preco_final = preco_com_taxa * (1 - self._promocao)
         else:
@@ -160,18 +144,22 @@ class Jogo:
         return self._nome
     
     def __str__(self):
-        preco_com_taxa = self._aplicar_taxa_loja(self._preco_original)
+        preco_com_taxa = self.aplicar_taxa_loja(self._preco_original)
         preco_final = self.aplicar_promocao()
-        return (f'Nome: {self._nome}, Empresa: {self._nome_empresa}, '
+        return (f'Nome: {self._nome}, Empresa: {self._chave}, '
                 f'Plataforma: {self._plataforma or "N/A"}, Categoria: {self._categoria or "N/A"}, '
                 f'Preço Original: R${self._preco_original:.2f}, '
                 f'Preço com Taxa: R${preco_com_taxa:.2f}, '
                 f'Preço com Taxa e Desconto: R${preco_final:.2f}')
 
-class Empresa(Entidade):
-    def __init__(self, nome, cnpj):
-        super().__init__(nome, cnpj)
+class Empresa(Base):
+    def __init__(self, nome, chave):
+        super().__init__(nome, chave)
         self._produtos = []
+
+    @property
+    def produtos(self):
+        return self._produtos
 
     def adicionar_produto(self, produto):
         self._produtos.append(produto)
@@ -191,13 +179,12 @@ class Empresa(Entidade):
     def __str__(self):
         return f'{self.nome} - CNPJ: {self.chave}'
 
-class Cliente:
-    def __init__(self, nome, cpf,idade):
-        self._nome = nome
-        self._cpf = cpf
+class Cliente(Base):
+    def __init__(self, nome, chave, idade):
+        super().__init__(nome, chave)
         self._idade = idade
         self._saldo = 0
-        self._jogos_comprados = set()  # Armazena os nomes dos jogos comprados
+        self._jogos_comprados = []
 
     @property
     def nome(self):
@@ -205,7 +192,11 @@ class Cliente:
 
     @property
     def chave(self):
-        return self._cpf
+        return self._chave
+    
+    @property
+    def jogos_comprados(self):
+        return self._jogos_comprados
 
     def adicionar_saldo(self, valor):
         self._saldo += valor
@@ -216,11 +207,20 @@ class Cliente:
             return True
         return False
 
-    def comprar_jogo(self, nome_jogo):
-        if nome_jogo in self._jogos_comprados:
-            return False  # O cliente já comprou este jogo
-        self._jogos_comprados.add(nome_jogo)
-        return True
+    def comprar_jogo(self, cpf_cliente, nome_produto, jogo):
+        cliente = self._clientes.get(cpf_cliente)
+        if not cliente:
+            print('Cliente não encontrado.')
+            return
+        
+        for jogo_comprado in cliente._jogos_comprados:
+            if jogo_comprado.get_nome() == nome_produto:
+                print('Jogo já comprado.')
+                return
+        
+        cliente._jogos_comprados.append(jogo)  # Adiciona o objeto Jogo à lista
+        self._receita += jogo._preco_original
+        print(f'Jogo {nome_produto} comprado com sucesso.')
 
     def remover_jogo(self, nome_jogo):
         if nome_jogo in self._jogos_comprados:
@@ -230,9 +230,9 @@ class Cliente:
         return self._jogos_comprados
 
     def __str__(self):
-        return f'{self._nome} (CPF: {self._cpf}, Idade: {self._idade}, Saldo: R${self._saldo:.2f})'
+        return f'{self._nome} (CPF: {self._chave}, Idade: {self._idade}, Saldo: R${self._saldo:.2f})'
 
-class Loja(FuncBase):
+class Loja(LojaInterface):
     def __init__(self):
         self._empresas = {}
         self._clientes = {}
@@ -247,10 +247,10 @@ class Loja(FuncBase):
         self._clientes[cliente.chave] = cliente
 
     def cadastrar_empresa(self, nome, cnpj):
-        if any(empresa.chave == cnpj for empresa in self._empresas.values()):  # Corrigido de cnpj para chave
+        if any(empresa.chave == cnpj for empresa in self._empresas.values()):  
             print(f'Já existe uma empresa cadastrada com o CNPJ {cnpj}.')
             return
-        if any(empresa.nome == nome for empresa in self._empresas.values()):  # Verifica se o nome já está cadastrado
+        if any(empresa.nome == nome for empresa in self._empresas.values()): 
             print(f'Já existe uma empresa cadastrada com o nome {nome}.')
             return
 
@@ -259,16 +259,32 @@ class Loja(FuncBase):
         print(f'Empresa {nome} cadastrada com sucesso.')
 
     def excluir_empresa(self, cnpj):
-        if cnpj in self._empresas:
-            del self._empresas[cnpj]
-            print('Empresa removida com sucesso.')
-        else:
+        empresa = self._empresas[cnpj]
+
+        if not empresa:
             print('Empresa não encontrada.')
+            return
+
+        print(empresa)
+        print(empresa.listar_produtos())
+
+        for i in self._clientes.keys():
+            print(self._clientes[i].jogos_comprados)
+            for j in empresa.listar_produtos():
+                if j in self._clientes[i].jogos_comprados:
+                    print('Não é possível excluir a empresa, pois pelo menos um de seus produtos foi comprado.')
+
+        # Remove a empresa se nenhum de seus produtos foi comprado
+        del self._empresas[cnpj]
+        print('Empresa removida com sucesso.')
 
     def listar_empresa(self):
         empresas = [str(empresa) for empresa in self._empresas.values()]
+        
         if not empresas:
-            return 'Não existe nenhum cadastro ainda.'
+            print('Não existe nenhum cadastro ainda.')
+            return []  
+        
         return empresas
 
     def editar_empresa(self, cnpj, novo_nome=None):
@@ -295,18 +311,25 @@ class Loja(FuncBase):
         print(f'Cliente {nome} cadastrado com sucesso.')
 
     def excluir_cliente(self, cpf):
-        if cpf in self._clientes:
-            del self._clientes[cpf]
-            print('Cliente removido com sucesso.')
+        cliente = self._clientes.get(cpf)
+        if cliente:
+            if cliente._jogos_comprados:
+                print('Cliente não pode ser removido porque possui jogos comprados.')
+            else:
+                del self._clientes[cpf]
+                print('Cliente removido com sucesso.')
         else:
             print('Cliente não encontrado.')
 
     def listar_cliente(self):
         clientes = [str(cliente) for cliente in self._clientes.values()]
+        
         if not clientes:
-            return 'Ainda não foi cadastrado nenhum cliente'
+            print('Ainda não foi cadastrado nenhum cliente')
+            return []  # Retorne uma lista vazia para evitar o erro de iteração
+        
         return clientes
-
+    
     def editar_cliente(self, cpf, novo_nome=None, nova_idade=None):
         cliente = self._clientes.get(cpf)
     
@@ -319,7 +342,7 @@ class Loja(FuncBase):
                     cliente._idade = nova_idade
                 else:
                     print('Idade deve ser 18 anos ou mais')
-                    return  # Opcionalmente, pode retornar aqui ou lidar de outra forma com a entrada inválida.
+                    return  
             
             print(f'Cliente com CPF {cpf} atualizado com sucesso.')
         else:
@@ -343,19 +366,36 @@ class Loja(FuncBase):
    
 
     def excluir_produto(self, cnpj_empresa, nome_produto):
+        
         empresa = self._empresas.get(cnpj_empresa)
-        if empresa:
-            empresa.remover_produto(nome_produto)
+        if not empresa:
+            print('Empresa não encontrada.')
+            return
+
+        
+        produto_existe = False
+        for cliente in self._clientes.values():
+            if nome_produto in cliente._jogos_comprados:
+                print('Não é possível excluir o produto, pois ele foi comprado por um cliente.')
+                return
+
+       
+        produto_existe = empresa.remover_produto(nome_produto)
+        if produto_existe:
             print('Produto removido com sucesso.')
         else:
-            print('Empresa não encontrada.')
+            print('Produto não encontrado.')
+
 
     def listar_produto(self):
         produtos = []
         for empresa in self._empresas.values():
             produtos.extend(empresa.listar_produtos())
+        
         if not produtos:
-            return 'Não possui produto cadastrado ainda.'
+            print('Não possui produto cadastrado ainda.')
+            return []  # Retorne uma lista vazia para evitar o erro de iteração
+        
         return produtos
 
     def editar_produto(self, cnpj_empresa, nome_produto, novo_nome=None, novo_preco=None, nova_plataforma=None, nova_categoria=None, nova_promocao=None):
@@ -367,7 +407,7 @@ class Loja(FuncBase):
                     produto._nome = novo_nome
                 if novo_preco is not None:
                     produto._preco_original = novo_preco
-                    produto._preco_com_taxa = produto._aplicar_taxa_loja(novo_preco)
+                    produto._preco_com_taxa = produto.aplicar_taxa_loja(novo_preco)
                     produto.definir_promocao(produto._promocao)  # Reaplicar promoção com o novo preço
                 if nova_plataforma:
                     produto._plataforma = nova_plataforma
@@ -376,7 +416,7 @@ class Loja(FuncBase):
                 if nova_promocao is not None:
                     produto.definir_promocao(nova_promocao)
                     # Recalcula o preço com a nova promoção
-                    produto._preco_com_taxa = produto._aplicar_taxa_loja(produto._preco_original)
+                    produto._preco_com_taxa = produto.aplicar_taxa_loja(produto._preco_original)
                     produto._preco_final = produto.aplicar_promocao()
                     
                 print('Produto editado com sucesso.')
@@ -415,7 +455,7 @@ class Loja(FuncBase):
                 self._historico.append((cliente.nome, nome_produto, preco_final))  # Adiciona a compra ao histórico
 
                 # Registra o jogo como comprado pelo cliente
-                cliente._jogos_comprados.add(nome_produto)
+                cliente._jogos_comprados.append(nome_produto)
 
                 print(f'Compra realizada com sucesso! Produto: {nome_produto}, Valor: R${preco_final:.2f}, Cliente: {cliente.nome}')
             else:
@@ -427,27 +467,22 @@ class Loja(FuncBase):
         cliente = self._clientes.get(cpf_cliente)
         if not cliente:
             print('Cliente não encontrado.')
-            return False
+            return
 
-        for empresa in self._empresas.values():
-            produto = empresa.buscar_produto(nome_jogo)
-            if produto and nome_jogo in cliente.listar_jogos_comprados():
-                preco_final = produto.aplicar_promocao()
-                preco_original = produto.get_preco_original()  # Supondo que você tenha um método para obter o preço original
-                cliente.adicionar_saldo(preco_final)
-                cliente.remover_jogo(nome_jogo)
+        produto = None
+        for jogo in cliente._jogos_comprados:
+            if jogo.get_nome() == nome_jogo:
+                produto = jogo
+                break
 
-                self._receita -= preco_final
-                self._lucro -= preco_final - preco_original
-
-                # Atualiza o histórico para incluir o reembolso
-                self._historico.append((cliente.nome, nome_jogo, -preco_final, "Reembolso"))  # Adiciona uma entrada de reembolso
-
-                print(f'Jogo {nome_jogo} reembolsado com sucesso para {cliente.nome}.')
-                return True
-        
-        print(f'Jogo {nome_jogo} não encontrado para reembolso.')
-        return False
+        if produto:
+            preco_original = produto._preco_original  # Certifique-se de que 'Jogo' tem um atributo '_preco_original'
+            cliente._saldo += preco_original
+            cliente._jogos_comprados.remove(produto)
+            self._receita -= preco_original
+            print(f'Jogo {nome_jogo} reembolsado com sucesso.')
+        else:
+            print('Jogo não encontrado na lista de compras do cliente.')
 
 
     def exibir_historico_cliente(self, cpf_cliente):
@@ -551,18 +586,9 @@ class Loja(FuncBase):
                     except ValueError:
                         print('Idade deve ser um número inteiro. Tente novamente.')
 
-                while True:
-                    novo_saldo = input('Novo Saldo do Cliente (deixe em branco para não alterar): ')
-                    if novo_saldo == '':
-                        novo_saldo = None
-                        break
-                    try:
-                        novo_saldo = float(novo_saldo)
-                        break
-                    except ValueError:
-                        print('Saldo deve ser um número válido. Tente novamente.')
+
                         
-                self.editar_cliente(cpf, novo_nome, nova_idade, novo_saldo)
+                self.editar_cliente(cpf, novo_nome, nova_idade)
                 
             elif opcao == '3':
                 cpf = input('CPF do Cliente: ')
@@ -729,6 +755,6 @@ class Loja(FuncBase):
             else:
                 print('Opção inválida. Tente novamente.')
 
-# Exemplo de execução
+
 loja = Loja()
 loja.executar()
