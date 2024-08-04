@@ -200,10 +200,11 @@ class Empresa(Entidade):
 
 # Classe Cliente
 class Cliente:
-    def __init__(self, nome, cpf, saldo=0):
+    def __init__(self, nome, cpf,idade):
         self._nome = nome
         self._cpf = cpf
-        self._saldo = saldo
+        self._idade = idade
+        self._saldo = 0
         self._jogos_comprados = set()  # Armazena os nomes dos jogos comprados
 
     @property
@@ -237,7 +238,8 @@ class Cliente:
         return self._jogos_comprados
 
     def __str__(self):
-        return f'{self._nome} (CPF: {self._cpf}, Saldo: R${self._saldo:.2f})'
+        return f'{self._nome} (CPF: {self._cpf}, Idade: {self._idade}, Saldo: R${self._saldo:.2f})'
+
 
 
 # Classe Loja
@@ -279,10 +281,15 @@ class Loja(FuncBase):
         else:
             print('Empresa não encontrada.')
 
-    def cadastrar_cliente(self, nome, cpf, saldo=0):
-        cliente = Cliente(nome, cpf, saldo)
+    def cadastrar_cliente(self, nome, cpf, idade):
+    
+        if idade < 18:
+            print(f'Cliente {nome} não pode ser cadastrado, idade menor que 18 anos.')
+            return
+        cliente = Cliente(nome, cpf, idade)  
         self._adicionar_cliente(cliente)
         print(f'Cliente {nome} cadastrado com sucesso.')
+
 
     def excluir_cliente(self, cpf):
         if cpf in self._clientes:
@@ -294,16 +301,24 @@ class Loja(FuncBase):
     def listar_cliente(self):
         return [str(cliente) for cliente in self._clientes.values()]
 
-    def editar_cliente(self, cpf, novo_nome=None, novo_saldo=None):
+    def editar_cliente(self, cpf, novo_nome=None, nova_idade=None):
         cliente = self._clientes.get(cpf)
+    
         if cliente:
-            if novo_nome:
+            if novo_nome is not None:
                 cliente._nome = novo_nome
-            if novo_saldo is not None:
-                cliente._saldo = novo_saldo
-            print('Cliente editado com sucesso.')
+            
+            if nova_idade is not None:
+                if isinstance(nova_idade, int) and nova_idade >= 17:
+                    cliente._idade = nova_idade
+                else:
+                    print('Idade deve ser 18 anos ou mais')
+                    return  # Opcionalmente, pode retornar aqui ou lidar de outra forma com a entrada inválida.
+            
+            print(f'Cliente com CPF {cpf} atualizado com sucesso.')
         else:
-            print('Cliente não encontrado.')
+            print(f'Cliente com CPF {cpf} não encontrado.')
+            
 
     def cadastrar_produto(self, cnpj_empresa, nome_produto, preco, plataforma=None, categoria=None, tipo_promocao=None):
         empresa = self._empresas.get(cnpj_empresa)
@@ -470,31 +485,109 @@ class Loja(FuncBase):
 
     def menu_clientes(self):
         while True:
-            print('\n1. Cadastrar Cliente\n2. Editar Cliente\n3. Excluir Cliente\n4. Listar Clientes\n5. Listar Jogos do Cliente\n6. Voltar\n')
+            print('\n1. Cadastrar Cliente\n2. Editar Cliente\n3. Excluir Cliente\n4. Listar Clientes\n5. Listar Jogos do Cliente\n6. Adicionar Saldo\n7. Remover Saldo\n8. Voltar\n')
             opcao = input('Escolha uma opção: ')
             
             if opcao == '1':
                 nome = input('Nome do Cliente: ')
                 cpf = input('CPF do Cliente: ')
-                saldo = float(input('Saldo do Cliente: '))
-                self.cadastrar_cliente(nome, cpf, saldo)
+                
+                while True:
+                    try:
+                        idade = int(input('Idade do Cliente: '))
+                        if idade < 0:
+                            print('Idade deve ser um número positivo.')
+                        else:
+                            break
+                    except ValueError:
+                        print('Idade deve ser um número inteiro. Tente novamente.')
+                        
+                self.cadastrar_cliente(nome, cpf, idade)
+                
             elif opcao == '2':
                 cpf = input('CPF do Cliente: ')
                 novo_nome = input('Novo Nome do Cliente (deixe em branco para não alterar): ')
-                novo_saldo = input('Novo Saldo do Cliente (deixe em branco para não alterar): ')
-                novo_saldo = float(novo_saldo) if novo_saldo else None
-                self.editar_cliente(cpf, novo_nome, novo_saldo)
+                
+                while True:
+                    nova_idade = input('Nova Idade do Cliente (deixe em branco para não alterar): ')
+                    if nova_idade == '':
+                        nova_idade = None
+                        break
+                    try:
+                        nova_idade = int(nova_idade)
+                        if nova_idade < 0:
+                            print('Idade deve ser um número positivo.')
+                        else:
+                            break
+                    except ValueError:
+                        print('Idade deve ser um número inteiro. Tente novamente.')
+
+                while True:
+                    novo_saldo = input('Novo Saldo do Cliente (deixe em branco para não alterar): ')
+                    if novo_saldo == '':
+                        novo_saldo = None
+                        break
+                    try:
+                        novo_saldo = float(novo_saldo)
+                        break
+                    except ValueError:
+                        print('Saldo deve ser um número válido. Tente novamente.')
+                        
+                self.editar_cliente(cpf, novo_nome, nova_idade, novo_saldo)
+                
             elif opcao == '3':
                 cpf = input('CPF do Cliente: ')
                 self.excluir_cliente(cpf)
+                
             elif opcao == '4':
                 for cliente in self.listar_cliente():
                     print(cliente)
+                    
             elif opcao == '5':
                 cpf_cliente = input('CPF do Cliente: ')
                 self.exibir_jogos_comprados(cpf_cliente)
+                
             elif opcao == '6':
+                cpf_cliente = input('CPF do Cliente: ')
+                cliente = self._clientes.get(cpf_cliente)
+                if cliente:
+                    while True:
+                        try:
+                            valor = float(input("Digite o valor que deseja adicionar à sua Carteira Steam Verde: "))
+                            if valor < 0:
+                                print("O valor deve ser positivo.")
+                            else:
+                                cliente.adicionar_saldo(valor)
+                                print(f"Saldo adicionado com sucesso. Novo saldo: R${cliente._saldo:.2f}")
+                                break
+                        except ValueError:
+                            print("Digite um valor numérico válido.")
+                else:
+                    print("Cliente não encontrado.")
+                    
+            elif opcao == '7':
+                cpf_cliente = input('CPF do Cliente: ')
+                cliente = self._clientes.get(cpf_cliente)
+                if cliente:
+                    while True:
+                        try:
+                            valor = float(input("Digite o valor que deseja remover da sua Carteira Steam Verde: "))
+                            if valor < 0:
+                                print("O valor deve ser positivo.")
+                            elif cliente.remover_saldo(valor):
+                                print(f"Saldo removido com sucesso. Novo saldo: R${cliente._saldo:.2f}")
+                                break
+                            else:
+                                print("Saldo insuficiente para a remoção.")
+                                break
+                        except ValueError:
+                            print("Digite um valor numérico válido.")
+                else:
+                    print("Cliente não encontrado.")
+                    
+            elif opcao == '8':
                 break
+                
             else:
                 print('Opção inválida. Tente novamente.')
 
@@ -530,32 +623,61 @@ class Loja(FuncBase):
             if opcao == '1':
                 cnpj_empresa = input('CNPJ da Empresa: ')
                 nome_produto = input('Nome do Produto: ')
-                preco = float(input('Preço do Produto: '))
+                
+                while True:
+                    try:
+                        preco = float(input('Preço do Produto: '))
+                        if preco < 0:
+                            print('O preço deve ser um valor positivo.')
+                        else:
+                            break
+                    except ValueError:
+                        print('Preço deve ser um número válido. Tente novamente.')
+                        
                 plataforma = input('Plataforma do Jogo: ')
                 categoria = input('Categoria do Jogo: ')
                 tipo_promocao = input('Tipo de Promoção (lançamento/fim de ano/deixe em branco para nenhuma): ')
                 self.cadastrar_produto(cnpj_empresa, nome_produto, preco, plataforma, categoria, tipo_promocao)
+            
             elif opcao == '2':
                 cnpj_empresa = input('CNPJ da Empresa: ')
                 nome_produto = input('Nome do Produto: ')
                 novo_nome = input('Novo Nome do Produto (deixe em branco para não alterar): ')
-                novo_preco = input('Novo Preço do Produto (deixe em branco para não alterar): ')
-                novo_preco = float(novo_preco) if novo_preco else None
+                
+                while True:
+                    novo_preco = input('Novo Preço do Produto (deixe em branco para não alterar): ')
+                    if novo_preco == '':
+                        novo_preco = None
+                        break
+                    try:
+                        novo_preco = float(novo_preco)
+                        if novo_preco < 0:
+                            print('O preço deve ser um valor positivo.')
+                        else:
+                            break
+                    except ValueError:
+                        print('Preço deve ser um número válido. Tente novamente.')
+                        
                 nova_plataforma = input('Nova Plataforma do Produto (deixe em branco para não alterar): ')
                 nova_categoria = input('Nova Categoria do Produto (deixe em branco para não alterar): ')
                 nova_promocao = input('Nova Promoção do Produto (lançamento/fim de ano/deixe em branco para nenhuma): ')
                 self.editar_produto(cnpj_empresa, nome_produto, novo_nome, novo_preco, nova_plataforma, nova_categoria, nova_promocao)
+            
             elif opcao == '3':
                 cnpj_empresa = input('CNPJ da Empresa: ')
                 nome_produto = input('Nome do Produto: ')
                 self.excluir_produto(cnpj_empresa, nome_produto)
+            
             elif opcao == '4':
                 for produto in self.listar_produto():
                     print(produto)
+            
             elif opcao == '5':
                 break
+            
             else:
                 print('Opção inválida. Tente novamente.')
+
 
     def menu_compras(self):
         while True:
