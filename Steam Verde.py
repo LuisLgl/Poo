@@ -404,12 +404,15 @@ class Loja(FuncBase):
                 self._lucro += lucro
                 self._historico.append((cliente.nome, nome_produto, preco_final))  # Adiciona a compra ao histórico
 
+                # Registra o jogo como comprado pelo cliente
+                cliente.jogos_comprados.add(nome_produto)
+
                 print(f'Compra realizada com sucesso! Produto: {nome_produto}, Valor: R${preco_final:.2f}, Cliente: {cliente.nome}')
             else:
                 print('Saldo insuficiente para realizar a compra.')
         else:
             print('Produto não encontrado.')
-    
+
     def reembolsar_jogo(self, cpf_cliente, nome_jogo):
         cliente = self._clientes.get(cpf_cliente)
         if not cliente:
