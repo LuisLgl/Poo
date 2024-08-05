@@ -118,13 +118,13 @@ class Jogo(Base,ProdutoInterface):
         self._preco_com_taxa = self.aplicar_taxa_loja(preco_original)
 
     def aplicar_taxa_loja(self, preco):
-        return preco * 1.30  # Supondo uma taxa de 30%
+        return preco * 1.30  
 
     def definir_promocao(self, tipo_promocao):
         if tipo_promocao == 'lançamento':
-            self._promocao = 0.10  # 10% de desconto
+            self._promocao = 0.10  
         elif tipo_promocao == 'fim de ano':
-            self._promocao = 0.20  # 20% de desconto
+            self._promocao = 0.20  
         else:
             self._promocao = None
 
@@ -161,7 +161,12 @@ class Empresa(Base):
         self._produtos.append(produto)
 
     def remover_produto(self, nome_produto):
-        self._produtos = [produto for produto in self._produtos if produto.nome != nome_produto]
+        produto_encontrado = any(produto.nome == nome_produto for produto in self._produtos)
+        if produto_encontrado:
+            self._produtos = [produto for produto in self._produtos if produto.nome != nome_produto]
+            return True
+        else:
+            return False
 
     def listar_produtos(self):
         return [str(produto) for produto in self._produtos]
@@ -219,7 +224,7 @@ class Loja(LojaInterface):
         self._clientes = {}
         self._receita = 0
         self._lucro = 0
-        self._historico = []  # Adiciona o atributo para o histórico
+        self._historico = []  
 
     def adicionar_empresa(self, empresa):
         self._empresas[empresa.chave] = empresa
@@ -269,7 +274,7 @@ class Loja(LojaInterface):
             print('Empresa não encontrada.')
 
     def cadastrar_cliente(self, nome, cpf, idade):
-        # Verificar se o CPF já está cadastrado
+
         if cpf in self._clientes:
             print(f'CPF {cpf} já cadastrado .')
             return
@@ -298,7 +303,7 @@ class Loja(LojaInterface):
         
         if not clientes:
             print('Ainda não foi cadastrado nenhum cliente')
-            return []  # Retorne uma lista vazia para evitar o erro de iteração
+            return []  
         
         return clientes
     
@@ -310,7 +315,7 @@ class Loja(LojaInterface):
                 cliente._nome = novo_nome
             
             if nova_idade is not None:
-                if isinstance(nova_idade, int) and nova_idade >= 17:
+                if isinstance(nova_idade, int) and nova_idade > 17:
                     cliente._idade = nova_idade
                 else:
                     print('Idade deve ser 18 anos ou mais')
@@ -323,7 +328,7 @@ class Loja(LojaInterface):
     def cadastrar_produto(self, cnpj_empresa, nome_produto, preco, plataforma=None, categoria=None, tipo_promocao=None):
         empresa = self._empresas.get(cnpj_empresa)
         if empresa:
-            # Verificar se o produto já está cadastrado
+            
             if empresa.buscar_produto(nome_produto):
                 print(f'O produto {nome_produto} já está cadastrado para a empresa {empresa._nome}.')
                 return
@@ -337,20 +342,18 @@ class Loja(LojaInterface):
             print('Empresa não encontrada.')
    
     def excluir_produto(self, cnpj_empresa, nome_produto):
-        
         empresa = self._empresas.get(cnpj_empresa)
         if not empresa:
             print('Empresa não encontrada.')
             return
 
         
-        produto_existe = False
         for cliente in self._clientes.values():
             if nome_produto in cliente._jogos_comprados:
                 print('Não é possível excluir o produto, pois ele foi comprado por um cliente.')
                 return
 
-       
+        
         produto_existe = empresa.remover_produto(nome_produto)
         if produto_existe:
             print('Produto removido com sucesso.')
@@ -364,7 +367,7 @@ class Loja(LojaInterface):
         
         if not produtos:
             print('Não possui produto cadastrado ainda.')
-            return []  # Retorne uma lista vazia para evitar o erro de iteração
+            return [] 
         
         return produtos
 
@@ -378,14 +381,13 @@ class Loja(LojaInterface):
                 if novo_preco is not None:
                     produto._preco_original = novo_preco
                     produto._preco_com_taxa = produto.aplicar_taxa_loja(novo_preco)
-                    produto.definir_promocao(produto._promocao)  # Reaplicar promoção com o novo preço
+                    produto.definir_promocao(produto._promocao)  
                 if nova_plataforma:
                     produto._plataforma = nova_plataforma
                 if nova_categoria:
                     produto._categoria = nova_categoria
                 if nova_promocao is not None:
                     produto.definir_promocao(nova_promocao)
-                    # Recalcula o preço com a nova promoção
                     produto._preco_com_taxa = produto.aplicar_taxa_loja(produto._preco_original)
                     produto._preco_final = produto.aplicar_promocao()
                     
@@ -408,7 +410,7 @@ class Loja(LojaInterface):
                 break
 
         if produto:
-            # Verifica se o cliente já comprou o jogo
+            
             if nome_produto in cliente.listar_jogos():
                 print(f'O cliente já comprou o jogo {nome_produto} anteriormente.')
                 return
@@ -418,13 +420,13 @@ class Loja(LojaInterface):
 
             if cliente.remover_saldo(total_preco):
                 receita = total_preco
-                lucro = total_preco * 0.30  # 30% de lucro para a loja
+                lucro = total_preco * 0.30  
 
                 self._receita += receita
                 self._lucro += lucro
-                self._historico.append((cliente.nome, nome_produto, preco_final))  # Adiciona a compra ao histórico
+                self._historico.append((cliente.nome, nome_produto, preco_final)) 
 
-                # Registra o jogo como comprado pelo cliente
+               
                 cliente._jogos_comprados.append(nome_produto)
 
                 print(f'Compra realizada com sucesso! Produto: {nome_produto}, Valor: R${preco_final:.2f}, Cliente: {cliente.nome}')
@@ -436,7 +438,6 @@ class Loja(LojaInterface):
     def exibir_historico_cliente(self, cpf_cliente):
         cliente = self._clientes.get(cpf_cliente)
         if cliente:
-            # Filtra o histórico para mostrar apenas compras, excluindo reembolsos
             compras_cliente = [compra for compra in self._historico if compra[0] == cliente.nome and compra[2] > 0]
             if compras_cliente:
                 print(f"Histórico de Compras do Cliente {cliente.nome}:")
@@ -515,7 +516,7 @@ class Loja(LojaInterface):
                 
             elif opcao == '2':
                 cpf = input('CPF do Cliente: ')
-                novo_nome = input('Novo Nome do Cliente (deixe em branco para não alterar): ')
+                novo_nome = input('Novo Nome do Cliente: ')
                 
                 while True:
                     nova_idade = input('Nova Idade do Cliente (deixe em branco para não alterar): ')
@@ -530,7 +531,7 @@ class Loja(LojaInterface):
                             break
                     except ValueError:
                         print('Idade deve ser um número inteiro. Tente novamente.')
-
+            
 
                         
                 self.editar_cliente(cpf, novo_nome, nova_idade)
